@@ -2,7 +2,6 @@ import {
   McpServer,
   ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
-// meaning we are going to communicate through the terminal only
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
@@ -12,7 +11,7 @@ const server = new McpServer({
   version: "1.0.0",
 });
 
-// Add an addition tool
+// Register tools
 server.registerTool(
   "add",
   {
@@ -25,25 +24,53 @@ server.registerTool(
   })
 );
 
-
-// Add a dynamic greeting resource
-server.registerResource(
-  "greeting",
-  new ResourceTemplate("greeting://{name}", { list: undefined }),
+server.registerTool(
+  "echo",
   {
-    title: "Greeting Resource", // Display name for UI
-    description: "Dynamic greeting generator",
+    title: "Echo Tool",
+    description: "Echoes back the provided message",
+    inputSchema: { message: z.string() },
   },
-  async (uri, { name }) => ({
-    contents: [
+  async ({ message }) => ({
+    content: [{ type: "text", text: `Tool echo: ${message}` }],
+  })
+);
+
+// Register prompts
+server.registerPrompt(
+  "analyze-bug",
+  {
+    title: "Bug Report Analyzer",
+    description: "Creates structured prompts for analyzing bug reports",
+    argsSchema: {
+      bugReport: z.string(),
+      severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+    },
+  },
+  ({ bugReport, severity }) => ({
+    messages: [
       {
-        uri: uri.href,
-        text: `Hello, ${name}!`,
+        role: "user",
+        content: {
+          type: "text",
+          text: `Analyze this bug report and provide:
+
+1. Root cause analysis
+2. Potential solutions
+3. Steps to reproduce
+4. Risk assessment
+${severity ? `5. Validation that severity level "${severity}" is appropriate` : ""}
+
+Bug Report:
+${bugReport}`,
+        },
       },
     ],
   })
 );
 
-// Start receiving messages on stdin and sending messages on stdout
+
+
+// Start the server
 const transport = new StdioServerTransport();
 await server.connect(transport);
