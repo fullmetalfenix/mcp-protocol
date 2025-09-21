@@ -2,10 +2,13 @@
   "mcpServers": {
     "demo-server": {
       "command": "node",
-      "args": ["index.js"],
-      "cwd": "C:\\Users\\jpihl\\Desktop\\mcp demo",
+      "args": [
+        "C:\\Users\\jpihl\\Desktop\\mcp demo\\index.js"
+      ],
       "disabled": false,
-      "autoApprove": ["add"]
+      "autoApprove": [
+        "add"
+      ]
     }
   }
 }
